@@ -1,7 +1,6 @@
 {
     "name": "php-concept/extension-validation-rakit",
     "description": "Concept Validation extension — magewirephp/validation and validation exceptions",
-    "version": "1.0.0",
     "type": "library",
     "license": "MIT",
     "autoload": {
