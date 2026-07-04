@@ -2,6 +2,7 @@
 
 namespace Concept\Extensions\ValidationRakit;
 
+use Closure;
 use Concept\Extensions\DataMasker\Contracts\DataMaskerInterface;
 use Concept\Extensions\Event\Events\ExtensionAwakened;
 use Concept\Extensions\Event\Support\EventDispatcherResolver;
@@ -18,12 +19,14 @@ final class ValidationServiceProvider extends AbstractServiceProvider
 
     /**
      * @param array<string, class-string<RuleInterface>> $customRules
+     * @param Closure(): ?DataMaskerInterface|null $dataMaskerFactory
      */
     public function __construct(
         private readonly array $customRules = [],
         private readonly bool $logEnabled = false,
         private readonly string $logPath = '',
         private readonly int $logMaxFiles = 7,
+        private readonly ?Closure $dataMaskerFactory = null,
     ) {}
 
     public function provides(string $id): bool
@@ -38,7 +41,7 @@ final class ValidationServiceProvider extends AbstractServiceProvider
     {
         $container = $this->getContainer();
 
-        $container->add(ValidationLogger::class, function() use ($container): ValidationLogger {
+        $container->add(ValidationLogger::class, function(): ValidationLogger {
             $monolog = new Monolog('validation');
             $monolog->pushHandler(new RotatingFileHandler(
                 $this->logPath,
@@ -46,10 +49,7 @@ final class ValidationServiceProvider extends AbstractServiceProvider
                 Level::Debug,
             ));
 
-            /** @var DataMaskerInterface|null $masker */
-            $masker = $container->has(DataMaskerInterface::class)
-                ? $container->get(DataMaskerInterface::class)
-                : null;
+            $masker = $this->resolveDataMasker();
 
             return new ValidationLogger($this->logEnabled, $monolog, $masker);
         })->setShared(true);
@@ -65,5 +65,17 @@ final class ValidationServiceProvider extends AbstractServiceProvider
 
             return $validator;
         })->setShared(true);
+    }
+
+    private function resolveDataMasker(): ?DataMaskerInterface
+    {
+        if ($this->dataMaskerFactory === null) {
+            return null;
+        }
+
+        $dataMaskerFactory = $this->dataMaskerFactory;
+        $masker = $dataMaskerFactory();
+
+        return $masker instanceof DataMaskerInterface ? $masker : null;
     }
 }
