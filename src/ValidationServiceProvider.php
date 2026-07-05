@@ -24,7 +24,7 @@ final class ValidationServiceProvider extends AbstractServiceProvider
     public function __construct(
         private readonly array $customRules = [],
         private readonly bool $logEnabled = false,
-        private readonly string $logPath = '',
+        private readonly string $logFilePath = '',
         private readonly int $logMaxFiles = 7,
         private readonly ?Closure $dataMaskerFactory = null,
     ) {}
@@ -44,7 +44,7 @@ final class ValidationServiceProvider extends AbstractServiceProvider
         $container->add(ValidationLogger::class, function(): ValidationLogger {
             $monolog = new Monolog('validation');
             $monolog->pushHandler(new RotatingFileHandler(
-                $this->logPath,
+                $this->logFilePath,
                 $this->logMaxFiles,
                 Level::Debug,
             ));
