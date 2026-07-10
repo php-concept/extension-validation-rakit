@@ -8,6 +8,7 @@ use Concept\Extensions\Event\Events\ExtensionAwakened;
 use Concept\Extensions\Event\Support\EventDispatcherResolver;
 use Concept\Extensions\ValidationRakit\Contracts\RuleInterface;
 use Concept\Extensions\ValidationRakit\Contracts\ValidatorInterface;
+use Concept\Support\FactoryResolver;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Level;
@@ -69,13 +70,10 @@ final class ValidationServiceProvider extends AbstractServiceProvider
 
     private function resolveDataMasker(): ?DataMaskerInterface
     {
-        if ($this->dataMaskerFactory === null) {
-            return null;
-        }
-
-        $dataMaskerFactory = $this->dataMaskerFactory;
-        $masker = $dataMaskerFactory();
-
-        return $masker instanceof DataMaskerInterface ? $masker : null;
+        return FactoryResolver::optional(
+            $this->dataMaskerFactory,
+            DataMaskerInterface::class,
+            'Data masker factory result',
+        );
     }
 }
