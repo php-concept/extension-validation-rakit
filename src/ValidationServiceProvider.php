@@ -9,14 +9,17 @@ use Concept\Extensions\Event\Support\EventDispatcherResolver;
 use Concept\Extensions\ValidationRakit\Contracts\RuleInterface;
 use Concept\Extensions\ValidationRakit\Contracts\ValidatorInterface;
 use Concept\Support\FactoryResolver;
+use InvalidArgumentException;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Level;
 use Monolog\Logger as Monolog;
+use Psr\Container\ContainerInterface;
 
 final class ValidationServiceProvider extends AbstractServiceProvider
 {
     private const string EXTENSION_NAME = 'validation-rakit';
+    private const string ERR_RULE_MUST_IMPLEMENT_INTERFACE = 'Rule %s must implement %s.';
 
     /**
      * @param array<string, class-string<RuleInterface>> $customRules
@@ -61,11 +64,33 @@ final class ValidationServiceProvider extends AbstractServiceProvider
                 anchorId: ValidatorInterface::class,
             ));
 
-            $validator = new Validator($container);
-            $validator->addRules($this->customRules);
+            $validator = new Validator();
+            $validator->addRules($this->resolveCustomRules($container));
 
             return $validator;
         })->setShared(true);
+    }
+
+    /**
+     * @return array<string, RuleInterface>
+     */
+    private function resolveCustomRules(ContainerInterface $container): array
+    {
+        $rules = [];
+        foreach ($this->customRules as $name => $ruleClass) {
+            $rule = $container->get($ruleClass);
+            if (!$rule instanceof RuleInterface) {
+                throw new InvalidArgumentException(sprintf(
+                    self::ERR_RULE_MUST_IMPLEMENT_INTERFACE,
+                    $ruleClass,
+                    RuleInterface::class,
+                ));
+            }
+
+            $rules[$name] = $rule;
+        }
+
+        return $rules;
     }
 
     private function resolveDataMasker(): ?DataMaskerInterface

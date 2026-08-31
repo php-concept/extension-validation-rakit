@@ -5,7 +5,7 @@ namespace Concept\Extensions\ValidationRakit\Contracts;
 interface ValidatorInterface
 {
     /**
-     * @param array<string, class-string<RuleInterface>> $rules
+     * @param array<string, RuleInterface> $rules
      */
     public function addRules(array $rules): void;
 
