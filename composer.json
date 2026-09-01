@@ -8,6 +8,17 @@
             "Concept\\Extensions\\ValidationRakit\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11"
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
     "require": {
         "php": "^8.4",
         "php-concept/core-2": "^1.0",
